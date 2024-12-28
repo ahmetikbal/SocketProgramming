@@ -1,3 +1,4 @@
+# Run the server (python http_server.py <port>) and open a browser to http://localhost:8080/100
 import socket
 import threading
 import re
@@ -100,7 +101,15 @@ def send_error(client_socket, status_code, message):
 if __name__ == "__main__":
     # Ensure a port number is provided as a command-line argument
     if len(sys.argv) != 2:
-        print("Usage: python main.py <port>")
+        print("Usage: python http_server.py <port>")
+        sys.exit(1)
+
+    try:
+        port = int(sys.argv[1])
+        if port < 1 or port > 65535:
+            raise ValueError
+    except ValueError:
+        print("Error: Port number must be an integer between 1 and 65535.")
         sys.exit(1)
 
     # Extract the port number and start the server
