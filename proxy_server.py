@@ -71,11 +71,11 @@ def get_conditional_headers(url):
     return {}
 
 
-def forward_request_to_server(client_socket, url):
+def forward_request_to_server(client_socket, url, port):
     try:
         # Connect to the HTTP server
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.connect(("localhost", 8080))
+        server_socket.connect(("localhost", port))
 
         # Prepare the request headers with conditional GET
         headers = get_conditional_headers(url)
@@ -133,6 +133,10 @@ def handle_proxy_client(client_socket):
             send_error(client_socket, 414, "Request-URL Too Long")
             return
 
+        # Parse port from request (default to 8080 if not specified)
+        port_match = re.search(r"localhost:(\d+)", request_line)
+        port = int(port_match.group(1)) if port_match else 8080
+
         # Check if the content is in cache
         cached_data = get_from_cache(url)
         if cached_data:
@@ -141,7 +145,7 @@ def handle_proxy_client(client_socket):
             client_socket.sendall(cached_data)
         else:
             print(f"Cache miss for {url}")
-            forward_request_to_server(client_socket, url)
+            forward_request_to_server(client_socket, url, port)
     except Exception as e:
         print(f"Error in proxy: {e}")
     finally:
