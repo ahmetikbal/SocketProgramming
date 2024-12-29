@@ -60,32 +60,35 @@ def start_server(port):
 
 def generate_html(size):
     # Fixed parts of the HTML structure
-    base_html = "<HTML><HEAD><TITLE>I am {} bytes long</TITLE></HEAD><BODY>".format(size)
-    closing_html = "</BODY></HTML>"
+    base_html = "<HTML> <HEAD> <TITLE>I am {} bytes long</TITLE> </HEAD> <BODY>".format(size)
+    closing_html = "</BODY> </HTML>"
 
     # Calculate remaining content size and fill it
-    content_length = size - len(base_html) - len(closing_html)
+    content_length = size - len(base_html) - len(closing_html) - 1
     if content_length < 0:
         return None
 
-    filler = "a" * content_length
-    return base_html + filler + closing_html
+    filler = "a " * (content_length // 2)  # 2 bytes for each a
+    if content_length % 2 == 1:
+        filler += "a"  # If the odd number, add an extra "a"
+
+    return f"{base_html} {filler.strip()} {closing_html}"
 
 def send_response(client_socket, html_content):
     # Calculate the size of the HTML content
-    content_length = len(html_content)
+    content_length = len(html_content.encode('utf-8'))
 
     # Construct the HTTP response with headers and content
-    response = (
+    response_headers = (
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/html\r\n"
         f"Content-Length: {content_length}\r\n"
         "\r\n"  # Blank line separating headers and body
-        f"{html_content}"
     )
+    response = response_headers + html_content
 
     # Send the response back to the client
-    client_socket.sendall(response.encode())
+    client_socket.sendall(response.encode('utf-8'))
 
 def send_error(client_socket, status_code, message):
     # Construct an error response
